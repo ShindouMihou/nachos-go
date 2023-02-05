@@ -29,7 +29,7 @@ func Reply(message *nats.Msg, msg any) {
 
 func ReplyMsg(message *nats.Msg, base *nats.Msg, msg *any) {
 	if contents, valid := marshal(message, msg); valid {
-		base.Reply = string(contents)
+		base.Data = contents
 		err := message.RespondMsg(base)
 		if err != nil {
 			Logger(Error, "Failed to send response to ", message.Subject, ": ", err)
