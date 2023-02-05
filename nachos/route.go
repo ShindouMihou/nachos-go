@@ -22,6 +22,14 @@ type Route struct {
 	// Children are additional children routes that will inherit the BeforeAction and EndAction of this parent node. Having children
 	// routes will automatically ignore Action since the route will be considered as a parent node.
 	Children []Route
+	// QueueGroup configures which queue group this route will be listening on, you can set this as nil to subscribe normally.
+	// Children nodes will also inherit this if there is no override.
+	QueueGroup *QueueGroup
+}
+
+type QueueGroup struct {
+	Enabled bool
+	Name    string
 }
 
 // Routes is where all the routes of the application is stored. You shouldn't modify this variable, it is exposed
@@ -69,6 +77,12 @@ func Subscribe(routes ...Route) {
 				endActions = parent.EndAction
 			}
 			child.EndAction = endActions
+
+			queueGroup := child.QueueGroup
+			if parent.QueueGroup != nil {
+				queueGroup = parent.QueueGroup
+			}
+			child.QueueGroup = queueGroup
 
 			child.Path = fmt.Sprint(strings.TrimSuffix(parent.Path, "."), ".", strings.TrimPrefix(child.Path, "."))
 			if child.Children == nil {

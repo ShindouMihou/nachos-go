@@ -5,13 +5,43 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
+var DefaultQueueGroup *QueueGroup = nil
+
 func Attach(conn *nats.Conn) error {
 	for path, route := range Routes {
-		subscription, err := conn.Subscribe(path, func(message *nats.Msg) {
-			Handle(route, message)
-		})
-		if err != nil {
-			return errors.Join(errors.New("failed to subscribe to "+path+": "), err)
+		var subscription *nats.Subscription
+		SubscribeRegularly := func(path string, route *Route) error {
+			s, err := conn.Subscribe(path, func(message *nats.Msg) {
+				Handle(route, message)
+			})
+			if err != nil {
+				return errors.Join(errors.New("failed to subscribe to "+path+": "), err)
+			}
+			subscription = s
+			return nil
+		}
+		if route.QueueGroup != nil || DefaultQueueGroup != nil {
+			var queueGroup = route.QueueGroup
+			if queueGroup == nil {
+				queueGroup = DefaultQueueGroup
+			}
+			if queueGroup.Enabled {
+				s, err := conn.QueueSubscribe(path, queueGroup.Name, func(message *nats.Msg) {
+					Handle(route, message)
+				})
+				if err != nil {
+					return errors.Join(errors.New("failed to subscribe to "+path+": "), err)
+				}
+				subscription = s
+			} else {
+				if err := SubscribeRegularly(path, route); err != nil {
+					return err
+				}
+			}
+		} else {
+			if err := SubscribeRegularly(path, route); err != nil {
+				return err
+			}
 		}
 		Subscriptions[path] = subscription
 	}
