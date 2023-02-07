@@ -34,7 +34,7 @@ type QueueGroup struct {
 
 // Routes is where all the routes of the application is stored. You shouldn't modify this variable, it is exposed
 // to enable some leeway in debugging or manipulation if needed.
-var Routes = make(map[string]Route)
+var Routes = make(map[string]*Route)
 var Subscriptions = make(map[string]*nats.Subscription)
 
 // TraceRoutes forces the translation layer of subscribe to log all the routes after appending them into the
@@ -47,15 +47,18 @@ var TraceRoutes = false
 func Subscribe(routes ...Route) {
 	for _, parent := range routes {
 		if parent.Children == nil {
-			traceAndAppend(parent)
+			traceAndAppend(&parent)
 			continue
 		}
-		translateChildren(parent)
+		translateChildren(&parent)
 	}
 }
 
-func translateChildren(parent Route) {
+func translateChildren(parent *Route) {
 	for _, child := range parent.Children {
+		// IMPORTANT: Force resolves the pointer issue.
+		child := child
+
 		var beforeActions = child.BeforeAction
 		if parent.BeforeAction != nil && child.BeforeAction != nil {
 			beforeActions = make([]BeforeActionEvent, len(parent.BeforeAction)+len(child.BeforeAction)-1)
@@ -89,13 +92,13 @@ func translateChildren(parent Route) {
 		}
 
 		if child.Children == nil {
-			traceAndAppend(child)
+			traceAndAppend(&child)
 			continue
 		}
-		translateChildren(child)
+		translateChildren(&child)
 	}
 }
-func traceAndAppend(route Route) {
+func traceAndAppend(route *Route) {
 	Routes[route.Path] = route
 	if TraceRoutes {
 		Logger(Trace, "Adding route ", route.Path, " with ", len(route.BeforeAction), " before actions, ", len(route.EndAction), " end actions and pointer ", &route)

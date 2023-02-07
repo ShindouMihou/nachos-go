@@ -9,8 +9,11 @@ var DefaultQueueGroup *QueueGroup = nil
 
 func Attach(conn *nats.Conn) error {
 	for path, route := range Routes {
+		path := path
+		route := route
+
 		var subscription *nats.Subscription
-		SubscribeRegularly := func(path string, route Route) error {
+		SubscribeRegularly := func(path string, route *Route) error {
 			s, err := conn.Subscribe(path, func(message *nats.Msg) {
 				Handle(route, message)
 			})
@@ -48,7 +51,7 @@ func Attach(conn *nats.Conn) error {
 	return nil
 }
 
-func Handle(route Route, message *nats.Msg) {
+func Handle(route *Route, message *nats.Msg) {
 	go func() {
 		canContinue := true
 		for _, beforeAction := range route.BeforeAction {
