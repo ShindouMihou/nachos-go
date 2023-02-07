@@ -10,7 +10,7 @@ var DefaultQueueGroup *QueueGroup = nil
 func Attach(conn *nats.Conn) error {
 	for path, route := range Routes {
 		var subscription *nats.Subscription
-		SubscribeRegularly := func(path string, route *Route) error {
+		SubscribeRegularly := func(path string, route Route) error {
 			s, err := conn.Subscribe(path, func(message *nats.Msg) {
 				Handle(route, message)
 			})
@@ -27,19 +27,19 @@ func Attach(conn *nats.Conn) error {
 			}
 			if queueGroup.Enabled {
 				s, err := conn.QueueSubscribe(path, queueGroup.Name, func(message *nats.Msg) {
-					Handle(&route, message)
+					Handle(route, message)
 				})
 				if err != nil {
 					return errors.Join(errors.New("failed to subscribe to "+path+": "), err)
 				}
 				subscription = s
 			} else {
-				if err := SubscribeRegularly(path, &route); err != nil {
+				if err := SubscribeRegularly(path, route); err != nil {
 					return err
 				}
 			}
 		} else {
-			if err := SubscribeRegularly(path, &route); err != nil {
+			if err := SubscribeRegularly(path, route); err != nil {
 				return err
 			}
 		}
@@ -48,7 +48,7 @@ func Attach(conn *nats.Conn) error {
 	return nil
 }
 
-func Handle(route *Route, message *nats.Msg) {
+func Handle(route Route, message *nats.Msg) {
 	go func() {
 		canContinue := true
 		for _, beforeAction := range route.BeforeAction {
