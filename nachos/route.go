@@ -3,7 +3,6 @@ package nachos
 import (
 	"fmt"
 	"github.com/nats-io/nats.go"
-	"log"
 	"strings"
 )
 
@@ -49,7 +48,6 @@ func Subscribe(routes ...Route) {
 	for _, parent := range routes {
 		if parent.Children == nil {
 			traceAndAppend(parent)
-			log.Println("Appended ", parent.Path)
 			continue
 		}
 		translateChildren(parent)
