@@ -1,7 +1,5 @@
 package nachos
 
-import "github.com/nats-io/nats.go"
-
-type BeforeActionEvent = func(message *nats.Msg) bool
-type ActionEvent = func(message *nats.Msg)
-type EndActionEvent = func(message *nats.Msg)
+type BeforeActionEvent = func(ctx *Context) bool
+type ActionEvent = func(ctx *Context)
+type EndActionEvent = func(ctx *Context)

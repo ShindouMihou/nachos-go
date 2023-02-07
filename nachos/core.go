@@ -53,9 +53,14 @@ func Attach(conn *nats.Conn) error {
 
 func Handle(route *Route, message *nats.Msg) {
 	go func() {
+		context := Context{
+			Message: message,
+			Store:   make(map[string]any),
+		}
+
 		canContinue := true
 		for _, beforeAction := range route.BeforeAction {
-			next := beforeAction(message)
+			next := beforeAction(&context)
 			if !next {
 				canContinue = false
 				break
@@ -64,9 +69,9 @@ func Handle(route *Route, message *nats.Msg) {
 		if !canContinue {
 			return
 		}
-		route.Action(message)
+		route.Action(&context)
 		for _, endAction := range route.EndAction {
-			go endAction(message)
+			go endAction(&context)
 		}
 	}()
 }
