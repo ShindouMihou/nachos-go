@@ -27,19 +27,19 @@ func Attach(conn *nats.Conn) error {
 			}
 			if queueGroup.Enabled {
 				s, err := conn.QueueSubscribe(path, queueGroup.Name, func(message *nats.Msg) {
-					Handle(route, message)
+					Handle(&route, message)
 				})
 				if err != nil {
 					return errors.Join(errors.New("failed to subscribe to "+path+": "), err)
 				}
 				subscription = s
 			} else {
-				if err := SubscribeRegularly(path, route); err != nil {
+				if err := SubscribeRegularly(path, &route); err != nil {
 					return err
 				}
 			}
 		} else {
-			if err := SubscribeRegularly(path, route); err != nil {
+			if err := SubscribeRegularly(path, &route); err != nil {
 				return err
 			}
 		}
