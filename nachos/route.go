@@ -84,7 +84,10 @@ func translateChildren(parent Route) {
 		}
 		child.QueueGroup = queueGroup
 
-		child.Path = fmt.Sprint(strings.TrimSuffix(parent.Path, "."), ".", strings.TrimPrefix(child.Path, "."))
+		if parent.Path != "" {
+			child.Path = fmt.Sprint(strings.TrimSuffix(parent.Path, "."), ".", strings.TrimPrefix(child.Path, "."))
+		}
+
 		if child.Children == nil {
 			traceAndAppend(child)
 			continue
