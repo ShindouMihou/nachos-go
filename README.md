@@ -17,14 +17,14 @@ func main() {
 		Children: []nachos.Route{
 			{
 				Path: "accept",
-				Action: func (message *nats.Msg) {
-					nachos.Reply(message, "Some message here")
+				Action: func (ctx *nachos.Context) {
+					nachos.Reply(ctx.Message, "Some message here")
 				},
 			},
 			{
 				Path: "delete",
-				Action: func (message *nats.Msg) {
-					nachos.Reply(message, struct { Message string `json:"message"` }{Message:"Acknowledged"})
+				Action: func (ctx *nachos.Context) {
+					nachos.Reply(ctx.Message, struct { Message string `json:"message"` }{Message:"Acknowledged"})
 				},
 			},
 		},
@@ -41,16 +41,16 @@ func main() {
 	route := nachos.Route{
 		Path: "quest.delete",
 		BeforeAction: []BeforeActionEvent{
-			func(message *nats.Msg) bool {
-				if message.Header.Get("Magic-Word") !== "Please" {
-					nachos.Reply(message, "Invalid magic word, please try better!")
+			func(ctx *nachos.Context) bool {
+				if ctx.Message.Header.Get("Magic-Word") !== "Please" {
+					nachos.Reply(ctx.Message, "Invalid magic word, please try better!")
 					return false
 				}
 				return true
 			},
 		},
-		Action: func (message *nats.Msg) {
-			nachos.Reply(message, "Yay, you sent the right magic word!")
+		Action: func (ctx *nachos.Context) {
+			nachos.Reply(ctx.Message, "Yay, you sent the right magic word!")
 		},
 	}
 	nachos.Subscribe(route)

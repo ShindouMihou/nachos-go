@@ -67,11 +67,16 @@ func Handle(route *Route, message *nats.Msg) {
 			}
 		}
 		if !canContinue {
+			for _, endAction := range route.EndAction {
+				if endAction.Passthrough {
+					go endAction.Action(&context)
+				}
+			}
 			return
 		}
 		route.Action(&context)
 		for _, endAction := range route.EndAction {
-			go endAction(&context)
+			go endAction.Action(&context)
 		}
 	}()
 }
